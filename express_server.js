@@ -26,10 +26,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+/* ------- "/" ------ */
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+/* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -42,10 +44,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+/* ------- "/urls/new" ------ */
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+/* ------- "/urls/:id" ------ */
 app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
@@ -54,12 +58,21 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id", (req, res) => {
+  const { id } = req.params;
+  const { newURL } = req.body;
+  urlDatabase[id] = newURL;
+  res.redirect("/urls");
+});
+
+/* ------- "/urls/:id/delete" ------ */
 app.post("/urls/:id/delete", (req, res) => {
   const { id } = req.params;
   delete urlDatabase[id];
   res.redirect("/urls");
 });
 
+/* ------- "/u/:id" ------ */
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
