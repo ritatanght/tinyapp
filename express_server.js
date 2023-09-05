@@ -39,6 +39,11 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
+  "1wegzb": {
+    id: "1wegzb",
+    email: "a@a.com",
+    password: "12345",
+  },
 };
 
 /* ------- "/" ------ */
@@ -49,8 +54,7 @@ app.get("/", (req, res) => {
 /* ------- "/register" ------ */
 app.get("/register", (req, res) => {
   const templateVars = {
-    users,
-    userId: req.cookies["user_id"],
+    user: users[req.cookies["user_id"]],
   };
   res.render("register", templateVars);
 });
@@ -59,6 +63,7 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
   const id = generateRandomString();
   users[id] = { id, email, password };
+
   res.cookie("user_id", id);
   res.redirect("/urls");
 });
@@ -79,11 +84,9 @@ app.post("/logout", (req, res) => {
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
   const templateVars = {
-    users,
-    userId: req.cookies["user_id"],
+    user: users[req.cookies["user_id"]],
     urls: urlDatabase,
   };
-  console.log(users);
   res.render("urls_index", templateVars);
 });
 
@@ -96,15 +99,14 @@ app.post("/urls", (req, res) => {
 
 /* ------- "/urls/new" ------ */
 app.get("/urls/new", (req, res) => {
-  const templateVars = { users, userId: req.cookies["user_id"] };
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 
 /* ------- "/urls/:id" ------ */
 app.get("/urls/:id", (req, res) => {
   const templateVars = {
-    users,
-    userId: req.cookies["user_id"],
+    user: users[req.cookies["user_id"]],
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
