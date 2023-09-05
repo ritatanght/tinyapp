@@ -40,6 +40,12 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+/* ------- "/logout" ------ */
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
+
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
   const templateVars = {
