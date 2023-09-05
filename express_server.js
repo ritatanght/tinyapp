@@ -3,22 +3,6 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
-const generateRandomString = () => {
-  // generate randomstring with length of 6 using base 36;
-  const randomString = Math.random().toString(36).slice(6);
-  let returnString = "";
-  for (const s of randomString) {
-    // when it is not a number, meaning it's a string
-    if (isNaN(s) && Math.random() < 0.5) {
-      // convert the char to capital letter with a 50% chance
-      returnString += s.toUpperCase();
-    } else {
-      returnString += s;
-    }
-  }
-  return returnString;
-};
-
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -28,6 +12,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+/* ------- Data ------ */
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -46,6 +31,36 @@ const users = {
   },
 };
 
+/* ------- Functions ------ */
+const generateRandomString = () => {
+  // generate randomstring with length of 6 using base 36;
+  const randomString = Math.random().toString(36).slice(6);
+  let returnString = "";
+  for (const s of randomString) {
+    // when it is not a number, meaning it's a string
+    if (isNaN(s) && Math.random() < 0.5) {
+      // convert the char to capital letter with a 50% chance
+      returnString += s.toUpperCase();
+    } else {
+      returnString += s;
+    }
+  }
+  return returnString;
+};
+
+// getUserByEmail takes in an email as a parameter, and return either the entire user object or null if not found.
+const getUserByEmail = (email) => {
+  for (const userId in users) {
+    console.log(users[userId]);
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return null;
+};
+
+/* ------- Routes ------ */
+
 /* ------- "/" ------ */
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -61,6 +76,11 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
+  // return 400 when either the email or password is empty string
+  if (!email || !password) return res.status(400).end();
+  // return 400 when the email input already exists in the users object
+  if (getUserByEmail(email)) return res.status(400).end();
+
   const id = generateRandomString();
   users[id] = { id, email, password };
 
