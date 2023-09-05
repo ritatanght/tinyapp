@@ -33,6 +33,15 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+/* ------- "/register" ------ */
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render("register", templateVars);
+});
+
+
 /* ------- "/login" ------ */
 app.post("/login", (req, res) => {
   const { username } = req.body;
