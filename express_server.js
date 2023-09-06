@@ -64,6 +64,16 @@ const getUserByEmail = (email) => {
   return null;
 };
 
+const urlsForUser = (id) => {
+  let urls = {};
+  for (const urlID in urlDatabase) {
+    if (urlDatabase[urlID].userID === id) {
+      urls[urlID] = { ...urlDatabase[urlID] };
+    }
+  }
+  return urls;
+};
+
 /* ------- Routes ------ */
 
 /* ------- "/" ------ */
@@ -126,9 +136,13 @@ app.post("/logout", (req, res) => {
 
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user)
+    return res.status(403).send("Only Logged in users can view shorten URLs");
+
   const templateVars = {
-    user: users[req.cookies.user_id],
-    urls: urlDatabase,
+    user,
+    urls: urlsForUser(user.id),
   };
   res.render("urls_index", templateVars);
 });
@@ -155,8 +169,13 @@ app.get("/urls/new", (req, res) => {
 
 /* ------- "/urls/:id" ------ */
 app.get("/urls/:id", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user)
+    return res.status(403).send("Only Logged in users can view shorten URLs");
+  if (urlDatabase[req.params.id].userID !== user.id)
+    return res.status(403).send("You can only view your own shorten URLs");
   const templateVars = {
-    user: users[req.cookies.user_id],
+    user,
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
   };
