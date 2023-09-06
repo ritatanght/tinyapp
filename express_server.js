@@ -78,9 +78,11 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   // return 400 when either the email or password is empty string
-  if (!email || !password) return res.status(400).send("Fields cannot be empty");
+  if (!email || !password)
+    return res.status(400).send("Fields cannot be empty");
   // return 400 when the email input already exists in the users object
-  if (getUserByEmail(email)) return res.status(400).send("Email already exists");
+  if (getUserByEmail(email))
+    return res.status(400).send("Email already exists");
 
   const id = generateRandomString();
   users[id] = { id, email, password };
@@ -128,7 +130,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) return res.status(403).send("Only Logged in users can shorten URLs");
+  if (!req.cookies["user_id"])
+    return res.status(403).send("Only Logged in users can shorten URLs");
   const longURL = req.body.longURL;
   const id = generateRandomString();
   urlDatabase[id] = longURL;
@@ -170,6 +173,7 @@ app.post("/urls/:id/delete", (req, res) => {
 /* ------- "/u/:id" ------ */
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  if (!longURL) return res.send("The provided ID does not exists.");
   res.redirect(longURL);
 });
 
