@@ -77,9 +77,9 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   // return 400 when either the email or password is empty string
-  if (!email || !password) return res.status(400).end();
+  if (!email || !password) return res.status(400).end("Fields cannot be empty");
   // return 400 when the email input already exists in the users object
-  if (getUserByEmail(email)) return res.status(400).end();
+  if (getUserByEmail(email)) return res.status(400).end("Email already exists");
 
   const id = generateRandomString();
   users[id] = { id, email, password };
@@ -97,15 +97,22 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const { username } = req.body;
-  res.cookie("username", username);
-  res.redirect("/urls");
+  const { email, password } = req.body;
+  const user = getUserByEmail(email);
+
+  if (!user) return res.status(403).end("Incorrect credentials");
+  // incorrect password input
+  if (user.password !== password)
+    return res.status(403).end("Incorrect credentials");
+
+  res.cookie("user_id", user.id);
+  return res.redirect("/urls");
 });
 
 /* ------- "/logout" ------ */
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/urls");
+  res.clearCookie("user_id");
+  res.redirect("/login");
 });
 
 /* ------- "/urls" ------ */
