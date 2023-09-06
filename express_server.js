@@ -183,17 +183,27 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
+  const user = users[req.cookies.user_id];
   const { id } = req.params;
   const { newURL } = req.body;
+  if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
+  if (!user) return res.status(403).send("You must log in first");
+  if (urlDatabase[id].userID !== user.id)
+    return res.status(403).send("You can only edit your own URLs");
   urlDatabase[id].longURL = newURL;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 /* ------- "/urls/:id/delete" ------ */
 app.post("/urls/:id/delete", (req, res) => {
+  const user = users[req.cookies.user_id];
   const { id } = req.params;
+  if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
+  if (!user) return res.status(403).send("You must log in first");
+  if (urlDatabase[id].userID !== user.id)
+    return res.status(403).send("You can only delete your own URLs");
   delete urlDatabase[id];
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 /* ------- "/u/:id" ------ */
