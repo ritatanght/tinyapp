@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
+const { getUserByEmail } = require("./helpers");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -55,16 +56,6 @@ const generateRandomString = () => {
   return returnString;
 };
 
-// getUserByEmail takes in an email as a parameter, and return either the entire user object or null if not found.
-const getUserByEmail = (email) => {
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  return null;
-};
-
 const urlsForUser = (id) => {
   let urls = {};
   for (const urlID in urlDatabase) {
@@ -97,7 +88,7 @@ app.post("/register", (req, res) => {
   if (!email || !password)
     return res.status(400).send("Fields cannot be empty");
   // return 400 when the email input already exists in the users object
-  if (getUserByEmail(email))
+  if (getUserByEmail(email, users))
     return res.status(400).send("Email already exists");
 
   const id = generateRandomString();
@@ -118,7 +109,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
 
   if (!user) return res.status(403).send("Incorrect credentials");
   // incorrect password input
