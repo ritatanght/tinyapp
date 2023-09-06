@@ -7,12 +7,12 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+/* ------- Data ------ */
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
-/* ------- Data ------ */
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -68,6 +68,8 @@ app.get("/", (req, res) => {
 
 /* ------- "/register" ------ */
 app.get("/register", (req, res) => {
+  // rediect to /urls when user is logged in
+  if (req.cookies["user_id"]) return res.redirect("/urls");
   const templateVars = {
     user: users[req.cookies["user_id"]],
   };
@@ -90,6 +92,8 @@ app.post("/register", (req, res) => {
 
 /* ------- "/login" ------ */
 app.get("/login", (req, res) => {
+  // rediect to /urls when user is logged in
+  if (req.cookies["user_id"]) return res.redirect("/urls");
   const templateVars = {
     user: users[req.cookies["user_id"]],
   };
