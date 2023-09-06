@@ -51,7 +51,6 @@ const generateRandomString = () => {
 // getUserByEmail takes in an email as a parameter, and return either the entire user object or null if not found.
 const getUserByEmail = (email) => {
   for (const userId in users) {
-    console.log(users[userId]);
     if (users[userId].email === email) {
       return users[userId];
     }
@@ -79,9 +78,9 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   // return 400 when either the email or password is empty string
-  if (!email || !password) return res.status(400).end("Fields cannot be empty");
+  if (!email || !password) return res.status(400).send("Fields cannot be empty");
   // return 400 when the email input already exists in the users object
-  if (getUserByEmail(email)) return res.status(400).end("Email already exists");
+  if (getUserByEmail(email)) return res.status(400).send("Email already exists");
 
   const id = generateRandomString();
   users[id] = { id, email, password };
@@ -104,10 +103,10 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email);
 
-  if (!user) return res.status(403).end("Incorrect credentials");
+  if (!user) return res.status(403).send("Incorrect credentials");
   // incorrect password input
   if (user.password !== password)
-    return res.status(403).end("Incorrect credentials");
+    return res.status(403).send("Incorrect credentials");
 
   res.cookie("user_id", user.id);
   return res.redirect("/urls");
@@ -129,6 +128,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) return res.status(403).send("Only Logged in users can shorten URLs");
   const longURL = req.body.longURL;
   const id = generateRandomString();
   urlDatabase[id] = longURL;
@@ -137,6 +137,8 @@ app.post("/urls", (req, res) => {
 
 /* ------- "/urls/new" ------ */
 app.get("/urls/new", (req, res) => {
+  // only allow logged in users
+  if (!req.cookies["user_id"]) return res.redirect("/login");
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
