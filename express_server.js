@@ -1,6 +1,10 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
-const { getUserByEmail } = require("./helpers");
+const {
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser,
+} = require("./helpers");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -27,43 +31,16 @@ const urlDatabase = {
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
-/* ------- Functions ------ */
-const generateRandomString = () => {
-  // generate randomstring with length of 6 using base 36;
-  const randomString = Math.random().toString(36).slice(6);
-  let returnString = "";
-  for (const s of randomString) {
-    // when it is not a number, meaning it's a string
-    if (isNaN(s) && Math.random() < 0.5) {
-      // convert the char to capital letter with a 50% chance
-      returnString += s.toUpperCase();
-    } else {
-      returnString += s;
-    }
-  }
-  return returnString;
-};
-
-const urlsForUser = (id) => {
-  let urls = {};
-  for (const urlID in urlDatabase) {
-    if (urlDatabase[urlID].userID === id) {
-      urls[urlID] = { ...urlDatabase[urlID] };
-    }
-  }
-  return urls;
+  // userRandomID: {
+  //   id: "userRandomID",
+  //   email: "user@example.com",
+  //   password: "purple-monkey-dinosaur",
+  // },
+  // user2RandomID: {
+  //   id: "user2RandomID",
+  //   email: "user2@example.com",
+  //   password: "dishwasher-funk",
+  // },
 };
 
 /* ------- Routes ------ */
@@ -135,7 +112,7 @@ app.get("/urls", (req, res) => {
 
   const templateVars = {
     user,
-    urls: urlsForUser(user.id),
+    urls: urlsForUser(user.id, urlDatabase),
   };
   res.render("urls_index", templateVars);
 });
@@ -179,7 +156,7 @@ app.post("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   const { id } = req.params;
   const { newURL } = req.body;
-  if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
+  if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
   if (!user) return res.status(403).send("You must log in first");
   if (urlDatabase[id].userID !== user.id)
     return res.status(403).send("You can only edit your own URLs");
@@ -191,7 +168,7 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.session.user_id];
   const { id } = req.params;
-  if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
+  if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
   if (!user) return res.status(403).send("You must log in first");
   if (urlDatabase[id].userID !== user.id)
     return res.status(403).send("You can only delete your own URLs");
