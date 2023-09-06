@@ -1,12 +1,17 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["key1"],
+  })
+);
 
 /* ------- Data ------ */
 const urlDatabase = {
@@ -80,7 +85,7 @@ app.get("/", (req, res) => {
 /* ------- "/register" ------ */
 app.get("/register", (req, res) => {
   // rediect to /urls when user is logged in
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (user) return res.redirect("/urls");
   const templateVars = { user };
   res.render("register", templateVars);
@@ -98,14 +103,14 @@ app.post("/register", (req, res) => {
   const id = generateRandomString();
   users[id] = { id, email, password: bcrypt.hashSync(password) };
 
-  res.cookie("user_id", id);
+  req.session.user_id = id;
   res.redirect("/urls");
 });
 
 /* ------- "/login" ------ */
 app.get("/login", (req, res) => {
   // rediect to /urls when user is logged in
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (user) return res.redirect("/urls");
   const templateVars = { user };
   res.render("login", templateVars);
@@ -120,19 +125,20 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(password, user.password))
     return res.status(403).send("Incorrect credentials");
 
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   return res.redirect("/urls");
 });
 
 /* ------- "/logout" ------ */
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  res.clearCookie("session");
   res.redirect("/login");
 });
 
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
+  console.log(user);
   if (!user)
     return res.status(403).send("Only Logged in users can view shorten URLs");
 
@@ -144,20 +150,20 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (!user)
     return res.status(403).send("Only Logged in users can shorten URLs");
   const { longURL } = req.body;
   const id = generateRandomString();
   //urlDatabase[id] = longURL;
-  urlDatabase[id] = { longURL, userID: req.cookies.user_id };
+  urlDatabase[id] = { longURL, userID: req.session.user_id };
   res.redirect(`/urls/${id}`);
 });
 
 /* ------- "/urls/new" ------ */
 app.get("/urls/new", (req, res) => {
   // only allow logged in users
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (!user) return res.redirect("/login");
   const templateVars = { user };
   res.render("urls_new", templateVars);
@@ -165,7 +171,7 @@ app.get("/urls/new", (req, res) => {
 
 /* ------- "/urls/:id" ------ */
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   if (!user)
     return res.status(403).send("Only Logged in users can view shorten URLs");
   if (urlDatabase[req.params.id].userID !== user.id)
@@ -179,7 +185,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const { id } = req.params;
   const { newURL } = req.body;
   if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
@@ -192,7 +198,7 @@ app.post("/urls/:id", (req, res) => {
 
 /* ------- "/urls/:id/delete" ------ */
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(403).send("ID does not exist");
   if (!user) return res.status(403).send("You must log in first");
