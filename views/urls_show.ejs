@@ -16,17 +16,48 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
-        </p>
+        <h5 class="card-title">TinyURL for: <%= urlObj.longURL %></h5>
+        <div class="card-text">
+          <p class="m-0">Short URL ID: <a href="/u/<%= id %>"><%= id %></a></p>
+          <small>Created: <%= urlObj.created %></small>
+        </div>
       </div>
       <div class="card-footer text-muted">
         <h5>Edit</h5>
         <form method="POST" action="/urls/<%= id %>?_method=PUT">
-          <label>New URL: <input type="text" name="newURL" value="<%= longURL %>" /></label>
+          <label
+            >New URL:
+            <input type="text" name="newURL" value="<%= urlObj.longURL %>"
+          /></label>
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
+      </div>
+      <div class="card-body">
+        <div class="card-text">
+          <h5>Visit History</h5>
+          <p class="mb-0">Total Visits: <%= urlObj.visits.length %></p>
+          <!-- get the visitor_id from each visit and count only the unique occurrence for each visitor -->
+          <p>
+            <em>Unique</em> Visits: <%= [...new
+            Set(urlObj.visits.map(visit=>visit.visitor_id))].length %>
+          </p>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Visitor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const visit of urlObj.visits){ %>
+              <tr>
+                <td><%= visit.timestamp %></td>
+                <td><%= visit.visitor_id %></td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <!-- Bootstrap JS -->
