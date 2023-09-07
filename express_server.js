@@ -8,7 +8,7 @@ const {
 } = require("./helpers");
 const bcrypt = require("bcryptjs");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -69,6 +69,7 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(password, user.password))
     return res.status(403).send("Incorrect credentials");
 
+  // set cookies
   req.session.user_id = user.id;
   return res.redirect("/urls");
 });
@@ -115,9 +116,11 @@ app.get("/urls/new", (req, res) => {
 
 /* ------- "/urls/:id" ------ */
 app.get("/urls/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
   const user = users[req.session.user_id];
   if (!user)
-    return res.status(403).send("Only Logged in users can view shorten URLs");
+    return res.status(403).send("Only logged in users can view shorten URLs");
   if (urlDatabase[req.params.id].userID !== user.id)
     return res.status(403).send("You can only view your own shorten URLs");
   const templateVars = {
@@ -154,9 +157,9 @@ app.post("/urls/:id/delete", (req, res) => {
 
 /* ------- "/u/:id" ------ */
 app.get("/u/:id", (req, res) => {
-  const { longURL } = urlDatabase[req.params.id];
-  if (!longURL) return res.send("The provided ID does not exists.");
-  res.redirect(longURL);
+  const urlObj = urlDatabase[req.params.id];
+  if (!urlObj) return res.status(404).send("The provided ID does not exists.");
+  res.redirect(urlObj.longURL);
 });
 
 app.get("/urls.json", (req, res) => {
@@ -165,10 +168,6 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/users.json", (req, res) => {
   res.json(users);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
