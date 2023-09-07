@@ -1,4 +1,4 @@
-// getUserByEmail takes in an email as a parameter, and return either the entire user object or null if not found.
+// getUserByEmail return either the entire user object or null if not found
 const getUserByEmail = (email, database) => {
   for (const userId in database) {
     if (database[userId].email === email) {
@@ -8,6 +8,7 @@ const getUserByEmail = (email, database) => {
   return null;
 };
 
+// Used to generate ID for shorten URLs or users
 const generateRandomString = () => {
   // generate randomstring using base 36;
   const randomString = Math.random().toString(36).slice(6);
@@ -24,6 +25,7 @@ const generateRandomString = () => {
   return returnString;
 };
 
+// urlsForUser return the list of shorten URLs created by the provided user
 const urlsForUser = (id, urlDatabase) => {
   let urls = {};
   for (const urlID in urlDatabase) {
