@@ -25,6 +25,7 @@ app.use(
 
 /* ------- "/" ------ */
 app.get("/", (req, res) => {
+  console.log(req.ip === req.socket.remoteAddress);
   const user = users[req.session.user_id];
   if (!user) return res.redirect("/login");
 
@@ -83,8 +84,8 @@ app.post("/login", (req, res) => {
 });
 
 /* ------- "/logout" ------ */
-app.post("/logout", (_req, res) => {
-  res.clearCookie("session");
+app.post("/logout", (req, res) => {
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -107,8 +108,13 @@ app.post("/urls", (req, res) => {
     return res.status(403).send("Only Logged in users can shorten URLs");
   const { longURL } = req.body;
   const id = generateRandomString();
-  //urlDatabase[id] = longURL;
-  urlDatabase[id] = { longURL, userID: req.session.user_id };
+  const currentDateTime = new Date();
+  urlDatabase[id] = {
+    longURL,
+    userID: req.session.user_id,
+    created: currentDateTime.toLocaleDateString(),
+    visits: [],
+  };
   res.redirect(`/urls/${id}`);
 });
 
@@ -135,8 +141,8 @@ app.get("/urls/:id", (req, res) => {
 
   const templateVars = {
     user,
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
+    id,
+    urlObj: urlDatabase[id],
   };
   res.render("urls_show", templateVars);
 });
@@ -174,6 +180,17 @@ app.delete("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const urlObj = urlDatabase[req.params.id];
   if (!urlObj) return res.status(404).send("The provided ID does not exists.");
+
+  // add a visit to the visits array under the url Id
+  let visitor_id = req.session.visitor_id;
+  if (!visitor_id) {
+    // generate ID for visitor and set it to cookies session
+    visitor_id = generateRandomString();
+    req.session.visitor_id = visitor_id;
+  }
+
+  const visit = { visitor_id, timestamp: Date() };
+  urlObj.visits.push(visit);
 
   res.redirect(urlObj.longURL);
 });
