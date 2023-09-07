@@ -9,7 +9,7 @@ const getUserByEmail = (email, database) => {
 };
 
 const generateRandomString = () => {
-  // generate randomstring with length of 6 using base 36;
+  // generate randomstring using base 36;
   const randomString = Math.random().toString(36).slice(6);
   let returnString = "";
   for (const s of randomString) {
@@ -21,7 +21,6 @@ const generateRandomString = () => {
       returnString += s;
     }
   }
-
   return returnString;
 };
 

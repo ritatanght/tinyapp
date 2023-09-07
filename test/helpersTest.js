@@ -1,6 +1,6 @@
 const { assert } = require("chai");
 
-const { getUserByEmail } = require("../helpers.js");
+const { getUserByEmail, generateRandomString } = require("../helpers.js");
 
 const testUsers = {
   userRandomID: {
@@ -29,5 +29,20 @@ describe("getUserByEmail", () => {
   it("should return null when provided with a non-existent email", () => {
     const user = getUserByEmail("user3@example.com", testUsers);
     assert.isNull(user);
+  });
+});
+
+describe("generateRandomString", () => {
+  it("generate strings that are different", () => {
+    const randomID1 = generateRandomString();
+    const randomID2 = generateRandomString();
+    const randomID3 = generateRandomString();
+
+    assert.isString(randomID1);
+    assert.isString(randomID2);
+    assert.isString(randomID3);
+    assert.notEqual(randomID1, randomID2);
+    assert.notEqual(randomID2, randomID3);
+    assert.notEqual(randomID1, randomID3);
   });
 });
