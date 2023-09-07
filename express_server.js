@@ -23,7 +23,10 @@ app.use(
 
 /* ------- "/" ------ */
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = users[req.session.user_id];
+  if (!user) return res.redirect("/login");
+
+  return res.redirect("/urls");
 });
 
 /* ------- "/register" ------ */
@@ -31,8 +34,9 @@ app.get("/register", (req, res) => {
   // rediect to /urls when user is logged in
   const user = users[req.session.user_id];
   if (user) return res.redirect("/urls");
+
   const templateVars = { user };
-  res.render("register", templateVars);
+  return res.render("register", templateVars);
 });
 
 app.post("/register", (req, res) => {
@@ -56,15 +60,17 @@ app.get("/login", (req, res) => {
   // rediect to /urls when user is logged in
   const user = users[req.session.user_id];
   if (user) return res.redirect("/urls");
+
   const templateVars = { user };
-  res.render("login", templateVars);
+  return res.render("login", templateVars);
 });
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, users);
-
+  // user not found with the provided email
   if (!user) return res.status(403).send("Incorrect credentials");
+
   // incorrect password input
   if (!bcrypt.compareSync(password, user.password))
     return res.status(403).send("Incorrect credentials");
@@ -75,7 +81,7 @@ app.post("/login", (req, res) => {
 });
 
 /* ------- "/logout" ------ */
-app.post("/logout", (req, res) => {
+app.post("/logout", (_req, res) => {
   res.clearCookie("session");
   res.redirect("/login");
 });
@@ -83,7 +89,6 @@ app.post("/logout", (req, res) => {
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
-  console.log(user);
   if (!user)
     return res.status(403).send("Only Logged in users can view shorten URLs");
 
@@ -118,11 +123,14 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
+
   const user = users[req.session.user_id];
   if (!user)
     return res.status(403).send("Only logged in users can view shorten URLs");
+
   if (urlDatabase[req.params.id].userID !== user.id)
     return res.status(403).send("You can only view your own shorten URLs");
+
   const templateVars = {
     user,
     id: req.params.id,
@@ -136,9 +144,12 @@ app.post("/urls/:id", (req, res) => {
   const { id } = req.params;
   const { newURL } = req.body;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
+
   if (!user) return res.status(403).send("You must log in first");
+
   if (urlDatabase[id].userID !== user.id)
     return res.status(403).send("You can only edit your own URLs");
+
   urlDatabase[id].longURL = newURL;
   return res.redirect("/urls");
 });
@@ -148,9 +159,12 @@ app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.session.user_id];
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
+
   if (!user) return res.status(403).send("You must log in first");
+
   if (urlDatabase[id].userID !== user.id)
     return res.status(403).send("You can only delete your own URLs");
+
   delete urlDatabase[id];
   return res.redirect("/urls");
 });
@@ -159,15 +173,8 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const urlObj = urlDatabase[req.params.id];
   if (!urlObj) return res.status(404).send("The provided ID does not exists.");
+
   res.redirect(urlObj.longURL);
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/users.json", (req, res) => {
-  res.json(users);
 });
 
 app.listen(PORT, () => {
