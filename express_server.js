@@ -25,7 +25,6 @@ app.use(
 
 /* ------- "/" ------ */
 app.get("/", (req, res) => {
-  console.log(req.ip === req.socket.remoteAddress);
   const user = users[req.session.user_id];
   if (!user) return res.redirect("/login");
 
@@ -51,12 +50,13 @@ app.post("/register", (req, res) => {
   if (getUserByEmail(email, users))
     return res.status(400).send("Email already exists");
 
+  // create new user
   const id = generateRandomString();
   const salt = bcrypt.genSaltSync(10);
   users[id] = { id, email, password: bcrypt.hashSync(password, salt) };
 
   req.session.user_id = id;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 /* ------- "/login" ------ */
@@ -79,7 +79,7 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(password, user.password))
     return res.status(403).send("Incorrect credentials");
 
-  // set cookies
+  // set cookies upon login
   req.session.user_id = user.id;
   return res.redirect("/urls");
 });
@@ -87,7 +87,7 @@ app.post("/login", (req, res) => {
 /* ------- "/logout" ------ */
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/login");
+  return res.redirect("/login");
 });
 
 /* ------- "/urls" ------ */
@@ -100,13 +100,15 @@ app.get("/urls", (req, res) => {
     user,
     urls: urlsForUser(user.id, urlDatabase),
   };
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (!user)
     return res.status(403).send("Only Logged in users can shorten URLs");
+
+  // add new shorten url to database
   const { longURL } = req.body;
   const id = generateRandomString();
   const currentDateTime = new Date();
@@ -116,7 +118,7 @@ app.post("/urls", (req, res) => {
     created: currentDateTime.toLocaleDateString(),
     visits: [],
   };
-  res.redirect(`/urls/${id}`);
+  return res.redirect(`/urls/${id}`);
 });
 
 /* ------- "/urls/new" ------ */
@@ -124,8 +126,9 @@ app.get("/urls/new", (req, res) => {
   // only allow logged in users
   const user = users[req.session.user_id];
   if (!user) return res.redirect("/login");
+
   const templateVars = { user };
-  res.render("urls_new", templateVars);
+  return res.render("urls_new", templateVars);
 });
 
 /* ------- "/urls/:id" ------ */
@@ -145,7 +148,7 @@ app.get("/urls/:id", (req, res) => {
     id,
     urlObj: urlDatabase[id],
   };
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 
 app.put("/urls/:id", (req, res) => {
@@ -193,7 +196,7 @@ app.get("/u/:id", (req, res) => {
   const visit = { visitor_id, timestamp: Date() };
   urlObj.visits.push(visit);
 
-  res.redirect(urlObj.longURL);
+  return res.redirect(urlObj.longURL);
 });
 
 /* ------- End of Routes ------ */
