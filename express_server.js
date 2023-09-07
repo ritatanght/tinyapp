@@ -52,7 +52,8 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Email already exists");
 
   const id = generateRandomString();
-  users[id] = { id, email, password: bcrypt.hashSync(password) };
+  const salt = bcrypt.genSaltSync(10);
+  users[id] = { id, email, password: bcrypt.hashSync(password, salt) };
 
   req.session.user_id = id;
   res.redirect("/urls");
