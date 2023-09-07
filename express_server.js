@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
+const methodOverride = require("method-override");
 const { urlDatabase, users } = require("./data");
 const {
   getUserByEmail,
@@ -12,6 +13,7 @@ const PORT = 8080;
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 app.use(
   cookieSession({
     name: "session",
@@ -139,7 +141,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   const { id } = req.params;
   const { newURL } = req.body;
@@ -154,8 +156,7 @@ app.post("/urls/:id", (req, res) => {
   return res.redirect("/urls");
 });
 
-/* ------- "/urls/:id/delete" ------ */
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
@@ -176,6 +177,8 @@ app.get("/u/:id", (req, res) => {
 
   res.redirect(urlObj.longURL);
 });
+
+/* ------- End of Routes ------ */
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
