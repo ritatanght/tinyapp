@@ -1,6 +1,25 @@
 const { assert } = require("chai");
 
-const { getUserByEmail, generateRandomString } = require("../helpers.js");
+const {
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser,
+} = require("../helpers.js");
+
+const testUrlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca/",
+    userID: "userRandomID",
+  },
+  s0aZah: {
+    longURL: "https://www.google.ca/",
+    userID: "userRandomID",
+  },
+  GMZ4sS: {
+    longURL: "https://ca.yahoo.om/",
+    userID: "user2RandomID",
+  },
+};
 
 const testUsers = {
   userRandomID: {
@@ -44,5 +63,26 @@ describe("generateRandomString", () => {
     assert.notEqual(randomID1, randomID2);
     assert.notEqual(randomID2, randomID3);
     assert.notEqual(randomID1, randomID3);
+  });
+});
+
+describe("urlsForUser", () => {
+  it("should return the list of shorten URLs created by the provided user", () => {
+    const urlList = urlsForUser("userRandomID", testUrlDatabase);
+    const expectedUrlList = {
+      b6UTxQ: {
+        longURL: "https://www.tsn.ca/",
+        userID: "userRandomID",
+      },
+      s0aZah: {
+        longURL: "https://www.google.ca/",
+        userID: "userRandomID",
+      },
+    };
+    assert.deepEqual(urlList, expectedUrlList);
+  });
+  it("should return empty obj when the the provided user has not created any shorten URLs", () => {
+    const urlList = urlsForUser("user3RandomID", testUrlDatabase);
+    assert.deepEqual(urlList, {});
   });
 });
