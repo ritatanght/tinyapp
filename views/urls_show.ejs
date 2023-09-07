@@ -39,7 +39,7 @@
           <!-- get the visitor_id from each visit and count only the unique occurrence for each visitor -->
           <p>
             <em>Unique</em> Visits: <%= [...new
-            Set(urlObj.visits.map(visit=>visit.visitor_id))].length %>
+            Set(urlObj.visits.map(visit=>visit.visitorId))].length %>
           </p>
           <table class="table table-striped">
             <thead>
@@ -52,7 +52,7 @@
               <% for (const visit of urlObj.visits){ %>
               <tr>
                 <td><%= visit.timestamp %></td>
-                <td><%= visit.visitor_id %></td>
+                <td><%= visit.visitorId %></td>
               </tr>
               <% } %>
             </tbody>

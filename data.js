@@ -7,7 +7,7 @@ const urlDatabase = {
     visits: [
       {
         timestamp: "Thu Sep 07 2023 12:43:12 GMT-0400 (Eastern Daylight Time)",
-        visitor_id: "2wkR52",
+        visitorId: "2wkR52",
       },
     ],
   },

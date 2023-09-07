@@ -25,7 +25,7 @@ app.use(
 
 /* ------- "/" ------ */
 app.get("/", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (!user) return res.redirect("/login");
 
   return res.redirect("/urls");
@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 /* ------- "/register" ------ */
 app.get("/register", (req, res) => {
   // rediect to /urls when user is logged in
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (user) return res.redirect("/urls");
 
   const templateVars = { user };
@@ -55,14 +55,14 @@ app.post("/register", (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   users[id] = { id, email, password: bcrypt.hashSync(password, salt) };
 
-  req.session.user_id = id;
+  req.session.userId = id;
   return res.redirect("/urls");
 });
 
 /* ------- "/login" ------ */
 app.get("/login", (req, res) => {
   // rediect to /urls when user is logged in
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (user) return res.redirect("/urls");
 
   const templateVars = { user };
@@ -80,7 +80,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Incorrect credentials");
 
   // set cookies upon login
-  req.session.user_id = user.id;
+  req.session.userId = user.id;
   return res.redirect("/urls");
 });
 
@@ -92,7 +92,7 @@ app.post("/logout", (req, res) => {
 
 /* ------- "/urls" ------ */
 app.get("/urls", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (!user)
     return res.status(403).send("Only Logged in users can view shorten URLs");
 
@@ -104,7 +104,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (!user)
     return res.status(403).send("Only Logged in users can shorten URLs");
 
@@ -114,7 +114,7 @@ app.post("/urls", (req, res) => {
   const currentDateTime = new Date();
   urlDatabase[id] = {
     longURL,
-    userID: req.session.user_id,
+    userID: req.session.userId,
     created: currentDateTime.toLocaleDateString(),
     visits: [],
   };
@@ -124,7 +124,7 @@ app.post("/urls", (req, res) => {
 /* ------- "/urls/new" ------ */
 app.get("/urls/new", (req, res) => {
   // only allow logged in users
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (!user) return res.redirect("/login");
 
   const templateVars = { user };
@@ -136,7 +136,7 @@ app.get("/urls/:id", (req, res) => {
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
 
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   if (!user)
     return res.status(403).send("Only logged in users can view shorten URLs");
 
@@ -152,7 +152,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.put("/urls/:id", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   const { id } = req.params;
   const { newURL } = req.body;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
@@ -167,7 +167,7 @@ app.put("/urls/:id", (req, res) => {
 });
 
 app.delete("/urls/:id", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.userId];
   const { id } = req.params;
   if (!id || !urlDatabase[id]) return res.status(404).send("ID does not exist");
 
@@ -186,14 +186,14 @@ app.get("/u/:id", (req, res) => {
   if (!urlObj) return res.status(404).send("The provided ID does not exists.");
 
   // add a visit to the visits array under the url Id
-  let visitor_id = req.session.visitor_id;
-  if (!visitor_id) {
+  let visitorId = req.session.visitorId;
+  if (!visitorId) {
     // generate ID for visitor and set it to cookies session
-    visitor_id = generateRandomString();
-    req.session.visitor_id = visitor_id;
+    visitorId = generateRandomString();
+    req.session.visitorId = visitorId;
   }
 
-  const visit = { visitor_id, timestamp: Date() };
+  const visit = { visitorId, timestamp: Date() };
   urlObj.visits.push(visit);
 
   return res.redirect(urlObj.longURL);
